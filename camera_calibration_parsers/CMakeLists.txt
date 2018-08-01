@@ -35,7 +35,7 @@ endif()
 include_directories(${YAML_CPP_INCLUDE_DIRS})
 
 # define the library
-add_library(${PROJECT_NAME}
+add_library(${PROJECT_NAME} STATIC
   src/parse.cpp
   src/parse_ini.cpp
   src/parse_yml.cpp

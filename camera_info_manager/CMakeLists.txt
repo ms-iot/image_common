@@ -13,9 +13,22 @@ catkin_package(INCLUDE_DIRS include
 include_directories(${catkin_INCLUDE_DIRS})
 include_directories(include)
 
+find_package(PkgConfig)
+if (ANDROID)
+    find_package(yaml-cpp)
+    add_definitions(-DHAVE_NEW_YAMLCPP)
+else()
+  pkg_check_modules(YAML_CPP yaml-cpp)
+  if(${YAML_CPP_VERSION} VERSION_GREATER 0.5)
+    add_definitions(-DHAVE_NEW_YAMLCPP)
+  endif()
+  link_directories(${YAML_CPP_LIBRARY_DIRS})
+endif()
+include_directories(${YAML_CPP_INCLUDE_DIRS})
+
 # add a library
 add_library(${PROJECT_NAME} src/camera_info_manager.cpp)
-target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${YAML_CPP_LIBRARIES})
 
 install(TARGETS ${PROJECT_NAME}
         DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
