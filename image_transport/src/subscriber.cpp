@@ -46,8 +46,9 @@ namespace image_transport {
 
 struct Subscriber::Impl
 {
-  Impl()
-    : logger_(rclcpp::get_logger("image_transport.subscriber")),
+  Impl(SubLoaderPtr loader)
+    : loader_(loader),
+      logger_(rclcpp::get_logger("image_transport.subscriber")),
       unsubscribed_(false)
   {
   }
@@ -55,6 +56,13 @@ struct Subscriber::Impl
   ~Impl()
   {
     shutdown();
+
+    std::cout << "isClassLoaded: " << loader_->isClassLoaded(lookup_name_) << std::endl;
+    std::cout << "~Subscriber::Impl" << std::endl;
+    delete subscriber_;
+    loader_->unloadLibraryForClass(lookup_name_);
+    loader_->unloadLibraryForClass(lookup_name_);
+    std::cout << "isClassLoaded: " << loader_->isClassLoaded(lookup_name_) << std::endl;
   }
 
   bool isValid() const
@@ -71,31 +79,30 @@ struct Subscriber::Impl
     }
   }
 
+  std::string lookup_name_;
   SubLoaderPtr loader_;
-  std::shared_ptr<SubscriberPlugin> subscriber_;
+  SubscriberPlugin* subscriber_;
   rclcpp::Logger logger_;
   bool unsubscribed_;
   //double constructed_;
 };
 
 Subscriber::Subscriber(rclcpp::Node::SharedPtr node, const std::string& base_topic,
-                       const std::function<void(const sensor_msgs::msg::Image::ConstSharedPtr&)>& callback,
+                       const Callback& callback,
                        SubLoaderPtr loader,
                        rmw_qos_profile_t custom_qos)
-  : impl_(new Impl)
+  : impl_(std::make_shared<Impl>(loader))
 {
   // Load the plugin for the chosen transport.
   // TODO(ros2) Get this from a parameter?
-  std::string lookup_name = SubscriberPlugin::getLookupName("raw");
+  impl_->lookup_name_ = SubscriberPlugin::getLookupName("raw");
   try {
-    auto instance = loader->createUniqueInstance(lookup_name);
-    impl_->subscriber_ = std::move(instance);
+    SubscriberPlugin* instance = loader->createUnmanagedInstance(impl_->lookup_name_);
+    impl_->subscriber_ = instance;
   }
   catch (pluginlib::PluginlibException& e) {
-    throw TransportLoadException(lookup_name, e.what());
+    throw TransportLoadException(impl_->lookup_name_, e.what());
   }
-  // Hang on to the class loader so our shared library doesn't disappear from under us.
-  impl_->loader_ = loader;
 
   // Try to catch if user passed in a transport-specific topic as base_topic.
   // TODO(ros2) use rclcpp to clean

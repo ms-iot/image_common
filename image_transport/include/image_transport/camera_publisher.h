@@ -65,7 +65,11 @@ class ImageTransport;
 class CameraPublisher
 {
 public:
-  CameraPublisher() {}
+  CameraPublisher() = default;
+
+  CameraPublisher(rclcpp::Node::SharedPtr node,
+                  const std::string& base_topic,
+                  rmw_qos_profile_t custom_qos = rmw_qos_profile_default);
 
   /*!
    * \brief Returns the number of subscribers that are currently connected to
@@ -117,17 +121,8 @@ public:
   bool operator==(const CameraPublisher& rhs) const { return impl_ == rhs.impl_; }
 
 private:
-  CameraPublisher(ImageTransport& image_it, rclcpp::Node::SharedPtr& info_nh,
-                  const std::string& base_topic,
-                  rmw_qos_profile_t custom_qos = rmw_qos_profile_default);
-
   struct Impl;
-  typedef std::shared_ptr<Impl> ImplPtr;
-  typedef std::weak_ptr<Impl> ImplWPtr;
-
-  ImplPtr impl_;
-
-  friend class ImageTransport;
+  std::shared_ptr<Impl> impl_;
 };
 
 } //namespace image_transport

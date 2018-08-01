@@ -50,11 +50,9 @@ public:
   SubscriberPlugin(const SubscriberPlugin&) = delete;
   SubscriberPlugin& operator=( const SubscriberPlugin& ) = delete;
 
-  typedef std::function<void(const sensor_msgs::msg::Image::ConstSharedPtr&)> Callback;
+  virtual ~SubscriberPlugin() {}
 
-  virtual ~SubscriberPlugin() {
-    std::cout << "~SubscriberPlugin" << std::endl;
-  }
+  typedef std::function<void(const sensor_msgs::msg::Image::ConstSharedPtr&)> Callback;
 
   /**
    * \brief Get a string identifier for the transport provided by

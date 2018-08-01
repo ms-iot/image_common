@@ -51,11 +51,6 @@ int total_images_received = 0;
 class MessagePassingTesting : public ::testing::Test
 {
 public:
-  image_transport::ImageTransport it()
-  {
-    return image_transport::ImageTransport(node_);
-  }
-
   sensor_msgs::msg::Image::UniquePtr generate_random_image()
   {
     auto image = std::make_unique<sensor_msgs::msg::Image>();
@@ -95,8 +90,8 @@ TEST_F(MessagePassingTesting, one_message_passing)
 
   rclcpp::executors::SingleThreadedExecutor executor;
 
-  image_transport::Publisher pub = it().advertise("camera/image");
-  image_transport::Subscriber sub = it().subscribe("camera/image", imageCallback);
+  auto pub = image_transport::create_publisher(node_, "camera/image");
+  auto sub = image_transport::create_subscription(node_, "camera/image", imageCallback);
 
   test_rclcpp::wait_for_subscriber(node_, sub.getTopic());
 
@@ -153,7 +148,6 @@ int main(int argc, char ** argv)
   rclcpp::init(argc, argv);
   testing::InitGoogleTest(&argc, argv);
   int ret = RUN_ALL_TESTS();
-  std::cout << "rclcpp::shutdown" << std::endl;
   rclcpp::shutdown();
   return ret;
 }

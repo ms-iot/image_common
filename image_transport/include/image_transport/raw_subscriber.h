@@ -49,7 +49,9 @@ namespace image_transport {
 class RawSubscriber : public SimpleSubscriberPlugin<sensor_msgs::msg::Image>
 {
 public:
-  virtual ~RawSubscriber() {}
+  virtual ~RawSubscriber() {
+    std::cout << "~RawSubscriber" << std::endl;
+  }
 
   virtual std::string getTransportName() const
   {

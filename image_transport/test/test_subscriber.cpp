@@ -10,29 +10,29 @@
 class TestPublisher : public ::testing::Test
 {
 protected:
-  static void SetUpTestCase()
-  {
-    rclcpp::init(0, nullptr);
-  }
-
   void SetUp()
   {
-    node = std::make_shared<rclcpp::Node>("image_transport", "/ns");
+    node_ = rclcpp::Node::make_shared("test_subscriber");
   }
 
-  void TearDown()
-  {
-    node.reset();
-  }
-
-  rclcpp::Node::SharedPtr node;
+  rclcpp::Node::SharedPtr node_;
 };
 
 TEST_F(TestPublisher, construction_and_destruction) {
-  image_transport::ImageTransport it(node);
+  std::function<void(const sensor_msgs::msg::Image::ConstSharedPtr & msg)> fcn =
+    [](const auto & msg) {(void)msg;};
 
-  std::function<void(const sensor_msgs::msg::Image::ConstSharedPtr& msg)> fcn =
-    [](const auto& msg) { (void)msg; };
+  auto sub = image_transport::create_subscription(node_, "camera/image", fcn);
 
-  image_transport::Subscriber sub = it.subscribe("camera/image", fcn);
+  rclcpp::executors::SingleThreadedExecutor executor;
+  executor.spin_node_some(node_);
+
+}
+
+int main(int argc, char** argv) {
+  rclcpp::init(argc, argv);
+  testing::InitGoogleTest(&argc, argv);
+  int ret = RUN_ALL_TESTS();
+  rclcpp::shutdown();
+  return ret;
 }

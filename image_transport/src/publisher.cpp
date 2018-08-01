@@ -62,7 +62,7 @@ struct Publisher::Impl
   uint32_t getNumSubscribers() const
   {
     uint32_t count = 0;
-    for (const auto& pub: publishers_) {
+    for (const auto & pub: publishers_) {
       count += pub->getNumSubscribers();
     }
     return count;
@@ -82,7 +82,7 @@ struct Publisher::Impl
   {
     if (!unadvertised_) {
       unadvertised_ = true;
-      for(auto& pub: publishers_) {
+      for (auto & pub: publishers_) {
         pub->shutdown();
       }
       publishers_.clear();
@@ -97,13 +97,15 @@ struct Publisher::Impl
   //double constructed_;
 };
 
-Publisher::Publisher(rclcpp::Node::SharedPtr node, const std::string& base_topic,
-                     PubLoaderPtr loader, rmw_qos_profile_t custom_qos)
-  : impl_(new Impl)
+Publisher::Publisher(
+  rclcpp::Node::SharedPtr node, const std::string & base_topic,
+  PubLoaderPtr loader, rmw_qos_profile_t custom_qos)
+: impl_(std::make_shared<Impl>())
 {
   // Resolve the name explicitly because otherwise the compressed topics don't remap
   // properly (#3652).
-  impl_->base_topic_  = rclcpp::expand_topic_or_service_name(base_topic, node->get_name(), node->get_namespace());
+  impl_->base_topic_ = rclcpp::expand_topic_or_service_name(base_topic,
+      node->get_name(), node->get_namespace());
   impl_->loader_ = loader;
 
   std::vector<std::string> blacklist_vec;
@@ -155,7 +157,7 @@ void Publisher::publish(const sensor_msgs::msg::Image & message) const
     return;
   }
 
-  for (const auto& pub: impl_->publishers_) {
+  for (const auto & pub: impl_->publishers_) {
     if (pub->getNumSubscribers() > 0) {
       pub->publish(message);
     }
@@ -169,7 +171,7 @@ void Publisher::publish(const sensor_msgs::msg::Image::ConstSharedPtr & message)
     return;
   }
 
-  for(const auto& pub: impl_->publishers_) {
+  for (const auto & pub: impl_->publishers_) {
     if (pub->getNumSubscribers() > 0) {
       pub->publish(message);
     }
@@ -188,10 +190,5 @@ Publisher::operator void *() const
 {
   return (impl_ && impl_->isValid()) ? (void *)1 : (void *)0;
 }
-
-bool Publisher::operator<(const Publisher & rhs) const {return impl_ < rhs.impl_;}
-bool Publisher::operator!=(const Publisher & rhs) const {return impl_ != rhs.impl_;}
-bool Publisher::operator==(const Publisher & rhs) const {return impl_ == rhs.impl_;}
-
 
 } //namespace image_transport

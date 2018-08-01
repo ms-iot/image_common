@@ -45,7 +45,7 @@ ament_target_dependencies(${PROJECT_NAME}
 add_library(${PROJECT_NAME}_plugins
   SHARED
   src/manifest.cpp
-  src/raw_publisher.cpp)
+)
 target_link_libraries(${PROJECT_NAME}_plugins ${PROJECT_NAME})
 pluginlib_export_plugin_description_file(image_transport default_plugins.xml)
 

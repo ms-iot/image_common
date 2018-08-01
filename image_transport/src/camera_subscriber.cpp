@@ -38,19 +38,20 @@
 #include <message_filters/subscriber.h>
 #include <message_filters/time_synchronizer.h>
 
-inline void increment(int* value)
+inline void increment(int * value)
 {
   ++(*value);
 }
 
-namespace image_transport {
+namespace image_transport
+{
 
 struct CameraSubscriber::Impl
 {
   Impl(rmw_qos_profile_t custom_qos)
-    : //sync_(custom_qos),
-      unsubscribed_(false),
-      image_received_(0), info_received_(0), both_received_(0)
+  :   //sync_(custom_qos),
+    unsubscribed_(false),
+    image_received_(0), info_received_(0), both_received_(0)
   {}
 
   ~Impl()
@@ -100,11 +101,12 @@ struct CameraSubscriber::Impl
   int image_received_, info_received_, both_received_;
 };
 
-CameraSubscriber::CameraSubscriber(ImageTransport& image_it, rclcpp::Node::SharedPtr& node,
-                                   const std::string& base_topic,
-                                   const Callback& callback,
-                                   rmw_qos_profile_t custom_qos)
-  : impl_(new Impl(custom_qos))
+CameraSubscriber::CameraSubscriber(
+  rclcpp::Node::SharedPtr node,
+  const std::string & base_topic,
+  const Callback & callback,
+  rmw_qos_profile_t custom_qos)
+: impl_(std::make_shared<Impl>(custom_qos))
 {
   // Must explicitly remap the image topic since we then do some string manipulation on it
   // to figure out the sibling camera_info topic.
@@ -155,12 +157,12 @@ std::string CameraSubscriber::getTransport() const
 
 void CameraSubscriber::shutdown()
 {
-  if (impl_) impl_->shutdown();
+  if (impl_) {impl_->shutdown();}
 }
 
-CameraSubscriber::operator void*() const
+CameraSubscriber::operator void *() const
 {
-  return (impl_ && impl_->isValid()) ? (void*)1 : (void*)0;
+  return (impl_ && impl_->isValid()) ? (void *)1 : (void *)0;
 }
 
 } //namespace image_transport
