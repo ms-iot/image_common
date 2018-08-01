@@ -26,7 +26,6 @@ TEST_F(TestPublisher, construction_and_destruction) {
 
   rclcpp::executors::SingleThreadedExecutor executor;
   executor.spin_node_some(node_);
-
 }
 
 int main(int argc, char** argv) {

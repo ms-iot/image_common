@@ -66,20 +66,18 @@ template<class M>
 class SimpleSubscriberPlugin : public SubscriberPlugin
 {
 public:
-  virtual ~SimpleSubscriberPlugin() {
-    std::cout << "~SimpleSubscriberPlugin" << std::endl;
-  };
+  virtual ~SimpleSubscriberPlugin() {};
 
   virtual std::string getTopic() const
   {
-    //if (simple_impl_) return simple_impl_->sub_->get_topic_name();
+    if (impl_) return impl_->sub_->get_topic_name();
     return std::string();
   }
 
   virtual uint32_t getNumPublishers() const
   {
     //if (simple_impl_) return simple_impl_->node_->count_publishers(getTopic());
-    return 0;
+    return 1;
   }
 
   virtual void shutdown()
@@ -114,19 +112,27 @@ protected:
     const Callback & callback,
     rmw_qos_profile_t custom_qos)
   {
+    impl_ = std::make_unique<Impl>();
     // Push each group of transport-specific parameters into a separate sub-namespace
     //ros::NodeHandle param_nh(transport_hints.getParameterNH(), getTransportName());
-    std::function<void (const std::shared_ptr<const M>)> fcn =
-      std::bind(&SimpleSubscriberPlugin<M>::internalCallback,
-          this, std::placeholders::_1, callback);
-
-    sub_ = node->create_subscription<M>(getTopicToSubscribe(base_topic),
-        [](const typename M::UniquePtr msg){ (void)msg; },
+    //
+    impl_->sub_ = node->create_subscription<M>(getTopicToSubscribe(base_topic),
+        [this, callback](const typename std::shared_ptr<const M> msg){
+          internalCallback(msg, callback);
+        },
         custom_qos);
   }
 
 private:
-  rclcpp::SubscriptionBase::SharedPtr sub_;
+  struct Impl
+  {
+    rclcpp::SubscriptionBase::SharedPtr sub_;
+  };
+
+  std::unique_ptr<Impl> impl_;
+
+
+
 };
 
 } //namespace image_transport

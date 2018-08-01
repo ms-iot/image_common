@@ -64,13 +64,6 @@ protected:
     total_images_received = 0;
   }
 
-  void TearDown() {
-    std::cout << "TearDown" << std::endl;
-    if(node_) {
-      std::cout << "Node still valid" << std::endl;
-    }
-  }
-
   rclcpp::Node::SharedPtr node_;
 };
 

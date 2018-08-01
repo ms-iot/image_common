@@ -49,9 +49,7 @@ namespace image_transport {
 class RawSubscriber : public SimpleSubscriberPlugin<sensor_msgs::msg::Image>
 {
 public:
-  virtual ~RawSubscriber() {
-    std::cout << "~RawSubscriber" << std::endl;
-  }
+  virtual ~RawSubscriber() {}
 
   virtual std::string getTransportName() const
   {
@@ -61,7 +59,6 @@ public:
 protected:
   virtual void internalCallback(const std::shared_ptr<const sensor_msgs::msg::Image>& message, const Callback& user_cb)
   {
-    std::cout << "internalCallback" << std::endl;
     user_cb(message);
   }
 };

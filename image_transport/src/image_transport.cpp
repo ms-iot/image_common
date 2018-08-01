@@ -32,34 +32,42 @@
 *  POSSIBILITY OF SUCH DAMAGE.
 *********************************************************************/
 
+#include <memory>
+
+#include <pluginlib/class_loader.hpp>
+
 #include "image_transport/camera_common.h"
 #include "image_transport/image_transport.h"
 #include "image_transport/publisher_plugin.h"
 #include "image_transport/subscriber_plugin.h"
+#include "image_transport/loader_fwds.h"
 
-#include <pluginlib/class_loader.hpp>
+static constexpr const char* kPluginClass = "image_transport";
+static constexpr const char* kSubBase = "image_transport::SubscriberPlugin";
+static constexpr const char* kPubBase = "image_transport::PublisherPlugin";
 
 namespace image_transport
 {
 
-static constexpr const char* kPluginClass = "image_transport";
-static constexpr const char* kSubscribeBase = "image_transport::SubscriberPlugin";
-static constexpr const char* kPublishBase = "image_transport::PublisherPlugin";
+struct Impl {
+  PubLoaderPtr pub_loader_;
+  SubLoaderPtr sub_loader_;
 
-PubLoaderPtr pub_loader() {
-  return std::make_shared<PubLoader>(kPluginClass, kPublishBase);
-}
+  Impl():
+    pub_loader_(std::make_shared<PubLoader>(kPluginClass, kPubBase)),
+    sub_loader_(std::make_shared<SubLoader>(kPluginClass, kSubBase))
+  {
+  }
+};
 
-SubLoaderPtr sub_loader() {
-  return std::make_shared<SubLoader>(kPluginClass, kSubscribeBase);
-}
+static Impl* impl_ = new Impl();
 
 Publisher create_publisher(
   rclcpp::Node::SharedPtr node,
   const std::string & base_topic,
   rmw_qos_profile_t custom_qos)
 {
-  return Publisher(node, base_topic, pub_loader(), custom_qos);
+  return Publisher(node, base_topic, impl_->pub_loader_, custom_qos);
 }
 
 Subscriber create_subscription(
@@ -68,7 +76,7 @@ Subscriber create_subscription(
   const Subscriber::Callback & callback,
   rmw_qos_profile_t custom_qos)
 {
-  return Subscriber(node, base_topic, callback, sub_loader(), custom_qos);
+  return Subscriber(node, base_topic, callback, impl_->sub_loader_, custom_qos);
 }
 
 CameraPublisher create_camera_publisher(
@@ -90,7 +98,7 @@ CameraSubscriber create_camera_subscription(
 
 std::vector<std::string> getDeclaredTransports()
 {
-  std::vector<std::string> transports = sub_loader()->getDeclaredClasses();
+  std::vector<std::string> transports = impl_->sub_loader_->getDeclaredClasses();
   // Remove the "_sub" at the end of each class name.
   for (std::string & transport: transports) {
     transport = erase_last_copy(transport, "_sub");
@@ -102,13 +110,13 @@ std::vector<std::string> getLoadableTransports()
 {
   std::vector<std::string> loadableTransports;
 
-  for (const std::string & transportPlugin: sub_loader()->getDeclaredClasses() ) {
+  for (const std::string & transportPlugin: impl_->sub_loader_->getDeclaredClasses() ) {
     // If the plugin loads without throwing an exception, add its
     // transport name to the list of valid plugins, otherwise ignore
     // it.
     try {
       std::shared_ptr<image_transport::SubscriberPlugin> sub =
-        sub_loader()->createUniqueInstance(transportPlugin);
+        impl_->sub_loader_->createUniqueInstance(transportPlugin);
       loadableTransports.push_back(erase_last_copy(transportPlugin, "_sub")); // Remove the "_sub" at the end of each class name.
     } catch (const pluginlib::LibraryLoadException & e) {
     } catch (const pluginlib::CreateClassException & e) {
