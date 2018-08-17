@@ -34,7 +34,9 @@
 *  POSSIBILITY OF SUCH DAMAGE.
 *********************************************************************/
 
+#ifndef WIN32
 #include <unistd.h>
+#endif
 #include <stdlib.h>
 #include <ros/ros.h>
 #include <ros/package.h>
@@ -112,8 +114,12 @@ void delete_file(std::string filename)
 
 void delete_default_file(void)
 {
+#ifdef WIN32
+  std::string ros_home("C:\\temp");
+#else
   std::string ros_home("/tmp");
-  setenv("ROS_HOME", ros_home.c_str(), true);
+#endif
+  _putenv(("ROS_HOME=" + ros_home).c_str());
   std::string tmpFile(ros_home + "/camera_info/camera.yaml");
   delete_file(tmpFile);
 }
@@ -452,7 +458,12 @@ TEST(SetInfo, saveCalibrationDefault)
 
   // Set ${ROS_HOME} to /tmp, then delete the /tmp/camera_info
   // directory and everything in it.
-  setenv("ROS_HOME", "/tmp", true);
+#ifdef WIN32
+  std::string ros_home("C:\\temp");
+#else
+  std::string ros_home("/tmp");
+#endif
+  _putenv(("ROS_HOME=" + ros_home).c_str());
   delete_tmp_camera_info_directory();
 
   {
@@ -489,8 +500,12 @@ TEST(SetInfo, saveCalibrationCameraName)
   bool success;
 
   // set ${ROS_HOME} to /tmp, delete the calibration file
+#ifdef WIN32
+  std::string ros_home("C:\\temp");
+#else
   std::string ros_home("/tmp");
-  setenv("ROS_HOME", ros_home.c_str(), true);
+#endif
+  _putenv(("ROS_HOME=" + ros_home).c_str());
   std::string tmpFile(ros_home + "/camera_info/" + g_camera_name + ".yaml");
   delete_file(tmpFile);
 
@@ -636,13 +651,18 @@ TEST(UrlSubstitution, rosHome)
   std::string home(home_env);
 
   // resolve ${ROS_HOME} with environment variable undefined
+#ifdef WIN32
+  _putenv("ROS_HOME=");
+#else
   unsetenv("ROS_HOME");
+#endif
   name_url = "file://${ROS_HOME}/camera_info/test_camera.yaml";
   exp_url = "file://" + home + "/.ros/camera_info/test_camera.yaml";
   check_url_substitution(node, name_url, exp_url, g_camera_name);
 
   // resolve ${ROS_HOME} with environment variable defined
-  setenv("ROS_HOME", "/my/ros/home", true);
+  // TODO: Fix home for Windows
+  _putenv("ROS_HOME=/my/ros/home");
   name_url = "file://${ROS_HOME}/camera_info/test_camera.yaml";
   exp_url = "file:///my/ros/home/camera_info/test_camera.yaml";
   check_url_substitution(node, name_url, exp_url, g_camera_name);
