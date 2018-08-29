@@ -35,7 +35,7 @@ endif()
 include_directories(${YAML_CPP_INCLUDE_DIRS})
 
 # define the library
-add_library(${PROJECT_NAME} STATIC
+add_library(${PROJECT_NAME}
   src/parse.cpp
   src/parse_ini.cpp
   src/parse_yml.cpp
@@ -45,6 +45,7 @@ add_library(${PROJECT_NAME}_wrapper
   src/parse_wrapper.cpp)
 
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${YAML_CPP_LIBRARIES} ${Boost_FILESYSTEM_LIBRARY})
+set_target_properties(${PROJECT_NAME} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
 target_link_libraries(${PROJECT_NAME}_wrapper ${PROJECT_NAME} ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${PYTHON_LIBRARIES})
 
 # Don't prepend wrapper library name with lib and add to Python libs.
