@@ -1,4 +1,4 @@
-<library path="lib/libresized_image_transport">
+<library path="lib/libresized_publisher">
   <class name="resized_pub" type="ResizedPublisher" base_class_type="image_transport::PublisherPlugin">
     <description>
       This plugin publishes a decimated version of the image.
