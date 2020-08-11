@@ -4,7 +4,7 @@ project(camera_calibration_parsers)
 find_package(catkin REQUIRED sensor_msgs rosconsole roscpp roscpp_serialization)
 
 find_package(PythonLibs REQUIRED)
-find_package(Boost REQUIRED COMPONENTS filesystem python)
+find_package(Boost REQUIRED COMPONENTS filesystem python38)
 include_directories(include ${catkin_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS} ${PYTHON_INCLUDE_DIRS})
 
 catkin_python_setup()
